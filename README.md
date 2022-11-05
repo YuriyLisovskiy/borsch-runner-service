@@ -1,5 +1,9 @@
 ## Trainee Golang Test Task
-[![Test](https://github.com/YuriyLisovskiy/borsch-runner-service/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/YuriyLisovskiy/borsch-runner-service/actions/workflows/ci.yml)
+
+| Branch | CI                                                                                                                                                                                                     |
+|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `main` | [![main-ci](https://github.com/YuriyLisovskiy/borsch-runner-service/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/YuriyLisovskiy/borsch-runner-service/actions/workflows/ci.yml) |
+| `dev`  | [![dev-ci](https://github.com/YuriyLisovskiy/borsch-runner-service/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/YuriyLisovskiy/borsch-runner-service/actions/workflows/ci.yml)   |
 
 ### Deployment with Docker
 Deploy the app:
