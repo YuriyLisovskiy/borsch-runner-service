@@ -1,0 +1,16 @@
+Dockerfile*
+.*ignore
+
+# IDEs configurations
+.idea/
+
+# OS-specific local files and directories
+.DS_Store
+
+# Docker configuration
+docker-compose*.yml
+
+# Other project stuff
+LICENSE
+README.md
+.github/

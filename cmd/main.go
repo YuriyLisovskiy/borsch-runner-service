@@ -1,7 +1,21 @@
 package main
 
-import "log"
+import (
+	"log"
+	"os"
+
+	"borsch-runner-service/core"
+)
 
 func main() {
-	log.Println("Hello, World")
+	server := os.Getenv("RABBITMQ_SERVER")
+	mq, err := core.NewRabbitMQService(server)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = mq.ConsumeJobs()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
