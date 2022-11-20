@@ -8,10 +8,7 @@
 
 package core
 
-import (
-	"log"
-	"strconv"
-)
+import "log"
 
 type JobLogger struct {
 	jobId          string
@@ -28,26 +25,5 @@ func (jl *JobLogger) Log(output string) {
 	if err != nil {
 		log.Println(err)
 		return
-	}
-}
-
-func (jl *JobLogger) OnError(err error) {
-	// TODO:
-	log.Printf("[JOB ERROR]: %v\n", err)
-}
-
-func (jl *JobLogger) OnExit(exitCode int, exitErr error) {
-	if exitErr != nil {
-		jl.OnError(exitErr)
-	}
-
-	jobResult := JobResultMessage{
-		ID:   jl.jobId,
-		Type: jobResultExit,
-		Data: strconv.Itoa(exitCode),
-	}
-	err := jl.amqpJobService.PublishResult(&jobResult)
-	if err != nil {
-		jl.OnError(exitErr)
 	}
 }

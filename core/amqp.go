@@ -38,6 +38,12 @@ type RabbitMQJobService struct {
 	jobResultQueue   amqp.Queue
 }
 
+const (
+	EnvRabbitMQServer      = "RABBITMQ_SERVER"
+	EnvRabbitMQJobQueue    = "RABBITMQ_JOB_QUEUE"
+	EnvRabbitMQResultQueue = "RABBITMQ_RESULT_QUEUE"
+)
+
 func NewRabbitMQService(server string) (*RabbitMQJobService, error) {
 	connection, err := amqp.Dial(server)
 	if err != nil {
@@ -48,13 +54,13 @@ func NewRabbitMQService(server string) (*RabbitMQJobService, error) {
 		Server:     server,
 		connection: connection,
 	}
-	service.jobChannel, service.jobQueue, err = createQueue(connection, os.Getenv("RABBITMQ_JOB_QUEUE"))
+	service.jobChannel, service.jobQueue, err = createQueue(connection, os.Getenv(EnvRabbitMQJobQueue))
 	if err != nil {
 		connection.Close()
 		return nil, err
 	}
 
-	service.jobResultChannel, service.jobResultQueue, err = createQueue(connection, os.Getenv("RABBITMQ_RESULT_QUEUE"))
+	service.jobResultChannel, service.jobResultQueue, err = createQueue(connection, os.Getenv(EnvRabbitMQResultQueue))
 	if err != nil {
 		connection.Close()
 		return nil, err
@@ -145,15 +151,11 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		amqpJobService: mq,
 	}
 
-	image := os.Getenv("IMAGE")
-	imageShell := os.Getenv("IMAGE_SHELL")
-	imageCommand := os.Getenv("IMAGE_COMMAND")
 	dockerJob := NewJob(
-		strings.ReplaceAll(image, "<language_version>", jobMessage.LangVersion),
-		imageShell,
-		imageCommand,
+		strings.ReplaceAll(os.Getenv(EnvContainerImageTemplate), "<language_version>", jobMessage.LangVersion),
+		os.Getenv(EnvContainerShell),
+		os.Getenv(EnvContainerCommandTemplate),
 		jobMessage.SourceCode,
-		jobLogger,
 		jobLogger,
 		jobLogger,
 	)

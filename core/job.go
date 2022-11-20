@@ -14,30 +14,19 @@ import (
 	"strings"
 )
 
-type JobInfoHandler interface {
-	OnError(err error)
-	OnExit(exitCode int, err error)
-}
-
 type Job struct {
-	container   *DockerContainer
-	shell       string
-	command     string
-	code        string
-	infoHandler JobInfoHandler
+	container *DockerContainer
+	command   []string
 }
 
-func NewJob(image, shell, command, code string, outWriter, errWriter StdLogger, infoHandler JobInfoHandler) *Job {
+func NewJob(image, shell, command, code string, outWriter, errWriter ContainerLogger) *Job {
 	return &Job{
 		container: &DockerContainer{
 			Image:  image,
 			Stdout: outWriter,
 			Stderr: errWriter,
 		},
-		shell:       shell,
-		command:     command,
-		code:        code,
-		infoHandler: infoHandler,
+		command: []string{shell, "-c", prepareShellScript(command, code)},
 	}
 }
 
@@ -46,12 +35,10 @@ func (j *Job) Run() (int, error) {
 		return -1, errors.New("docker container is nil")
 	}
 
-	code := strings.ReplaceAll(j.code, "\"", "\\\"")
-	shellScript := strings.ReplaceAll(j.command, "<code>", fmt.Sprintf("\"%s\"", code))
-	// exitCode, err := j.container.Run(j.shell, "-c", shellScript)
-	// if j.infoHandler != nil {
-	// 	j.infoHandler.OnExit(exitCode, err)
-	// }
-	//
-	return j.container.Run(j.shell, "-c", shellScript)
+	return j.container.Run(j.command...)
+}
+
+func prepareShellScript(command, code string) string {
+	code = strings.ReplaceAll(code, "\"", "\\\"")
+	return strings.ReplaceAll(command, "<code>", fmt.Sprintf("\"%s\"", code))
 }

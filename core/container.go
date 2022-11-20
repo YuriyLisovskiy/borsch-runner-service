@@ -16,14 +16,20 @@ import (
 	"os/exec"
 )
 
-type StdLogger interface {
+const (
+	EnvContainerImageTemplate   = "CONTAINER_IMAGE_TEMPLATE"
+	EnvContainerShell           = "CONTAINER_SHELL"
+	EnvContainerCommandTemplate = "CONTAINER_COMMAND_TEMPLATE"
+)
+
+type ContainerLogger interface {
 	Log(out string)
 }
 
 type DockerContainer struct {
 	Image  string
-	Stdout StdLogger
-	Stderr StdLogger
+	Stdout ContainerLogger
+	Stderr ContainerLogger
 
 	cmd *exec.Cmd
 }
@@ -82,7 +88,7 @@ type stdScanner struct {
 	doneChan <-chan bool
 }
 
-func newStdScanner(pipe io.ReadCloser, writer StdLogger) (*stdScanner, error) {
+func newStdScanner(pipe io.ReadCloser, writer ContainerLogger) (*stdScanner, error) {
 	scanner := bufio.NewScanner(pipe)
 	done := make(chan bool)
 	go func() {
