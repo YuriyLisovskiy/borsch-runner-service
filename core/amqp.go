@@ -10,6 +10,7 @@ package core
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -151,11 +152,16 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		amqpJobService: mq,
 	}
 
+	sourceCode, err := base64.StdEncoding.DecodeString(jobMessage.SourceCodeB64)
+	if err != nil {
+		return err
+	}
+
 	dockerJob := NewJob(
 		strings.ReplaceAll(os.Getenv(EnvContainerImageTemplate), "<language_version>", jobMessage.LangVersion),
 		os.Getenv(EnvContainerShell),
 		os.Getenv(EnvContainerCommandTemplate),
-		jobMessage.SourceCode,
+		string(sourceCode),
 		jobLogger,
 		jobLogger,
 	)
