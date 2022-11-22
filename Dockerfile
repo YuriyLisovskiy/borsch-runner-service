@@ -7,7 +7,7 @@ RUN #apk add build-base
 COPY . .
 
 RUN go mod download
-RUN go build -o ./borsch-runner-service ./cmd/main.go
+RUN go build -o ./borsch-runner-service ./cmd/runner/main.go
 
 FROM docker:20.10.17-alpine3.16
 WORKDIR /app/

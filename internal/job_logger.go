@@ -6,9 +6,13 @@
  * terms of the MIT license.
  */
 
-package core
+package internal
 
-import "log"
+import (
+	"log"
+
+	"YuriyLisovskiy/borsch-runner-service/pkg/messages"
+)
 
 type JobLogger struct {
 	jobId          string
@@ -16,9 +20,9 @@ type JobLogger struct {
 }
 
 func (jl *JobLogger) Log(output string) {
-	notification := JobResultMessage{
+	notification := messages.JobResultMessage{
 		ID:   jl.jobId,
-		Type: jobResultLog,
+		Type: messages.JobResultLog,
 		Data: output,
 	}
 	err := jl.amqpJobService.PublishResult(&notification)

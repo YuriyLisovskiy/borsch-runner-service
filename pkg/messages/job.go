@@ -6,7 +6,7 @@
  * terms of the MIT license.
  */
 
-package core
+package messages
 
 type JobMessage struct {
 	ID            string `json:"id"`
@@ -14,15 +14,15 @@ type JobMessage struct {
 	SourceCodeB64 string `json:"source_code_b64"`
 }
 
-type jobResultType string
+type JobResultType string
 
 const (
-	jobResultLog  jobResultType = "log"
-	jobResultExit               = "exit"
+	JobResultLog  JobResultType = "log"
+	JobResultExit               = "exit"
 )
 
 type JobResultMessage struct {
 	ID   string        `json:"id"`
-	Type jobResultType `json:"type"`
+	Type JobResultType `json:"type"`
 	Data string        `json:"data"`
 }

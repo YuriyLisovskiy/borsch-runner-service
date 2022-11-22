@@ -6,7 +6,7 @@
  * terms of the MIT license.
  */
 
-package core
+package docker
 
 import (
 	"bufio"
@@ -26,7 +26,7 @@ type ContainerLogger interface {
 	Log(out string)
 }
 
-type DockerContainer struct {
+type Container struct {
 	Image  string
 	Stdout ContainerLogger
 	Stderr ContainerLogger
@@ -34,7 +34,7 @@ type DockerContainer struct {
 	cmd *exec.Cmd
 }
 
-func (dc *DockerContainer) Run(args ...string) (int, error) {
+func (dc *Container) Run(args ...string) (int, error) {
 	defer func() {
 		dc.cmd = nil
 	}()

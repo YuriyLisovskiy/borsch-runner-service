@@ -1,4 +1,4 @@
-module borsch-runner-service
+module YuriyLisovskiy/borsch-runner-service
 
 go 1.17
 

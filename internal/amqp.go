@@ -6,7 +6,7 @@
  * terms of the MIT license.
  */
 
-package core
+package internal
 
 import (
 	"context"
@@ -19,12 +19,14 @@ import (
 	"strings"
 	"time"
 
+	"YuriyLisovskiy/borsch-runner-service/pkg/docker"
+	"YuriyLisovskiy/borsch-runner-service/pkg/messages"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type AMQPJobService interface {
 	ConsumeJobs() error
-	PublishResult(jobResult *JobResultMessage) error
+	PublishResult(jobResult *messages.JobResultMessage) error
 }
 
 type RabbitMQJobService struct {
@@ -108,7 +110,7 @@ func (mq *RabbitMQJobService) ConsumeJobs() error {
 	return nil
 }
 
-func (mq *RabbitMQJobService) PublishResult(jobResult *JobResultMessage) error {
+func (mq *RabbitMQJobService) PublishResult(jobResult *messages.JobResultMessage) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -139,7 +141,7 @@ func (mq *RabbitMQJobService) PublishResult(jobResult *JobResultMessage) error {
 }
 
 func (mq *RabbitMQJobService) processJob(data []byte) error {
-	jobMessage := JobMessage{}
+	jobMessage := messages.JobMessage{}
 	err := json.Unmarshal(data, &jobMessage)
 	if err != nil {
 		return err
@@ -158,9 +160,9 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 	}
 
 	dockerJob := NewJob(
-		strings.ReplaceAll(os.Getenv(EnvContainerImageTemplate), "<language_version>", jobMessage.LangVersion),
-		os.Getenv(EnvContainerShell),
-		os.Getenv(EnvContainerCommandTemplate),
+		strings.ReplaceAll(os.Getenv(docker.EnvContainerImageTemplate), "<language_version>", jobMessage.LangVersion),
+		os.Getenv(docker.EnvContainerShell),
+		os.Getenv(docker.EnvContainerCommandTemplate),
 		string(sourceCode),
 		jobLogger,
 		jobLogger,
@@ -170,9 +172,9 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		return err
 	}
 
-	jobResult := JobResultMessage{
+	jobResult := messages.JobResultMessage{
 		ID:   jobMessage.ID,
-		Type: jobResultExit,
+		Type: messages.JobResultExit,
 		Data: strconv.Itoa(exitCode),
 	}
 

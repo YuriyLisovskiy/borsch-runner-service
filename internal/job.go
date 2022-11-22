@@ -6,22 +6,24 @@
  * terms of the MIT license.
  */
 
-package core
+package internal
 
 import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"YuriyLisovskiy/borsch-runner-service/pkg/docker"
 )
 
 type Job struct {
-	container *DockerContainer
+	container *docker.Container
 	command   []string
 }
 
-func NewJob(image, shell, command, code string, outWriter, errWriter ContainerLogger) *Job {
+func NewJob(image, shell, command, code string, outWriter, errWriter docker.ContainerLogger) *Job {
 	return &Job{
-		container: &DockerContainer{
+		container: &docker.Container{
 			Image:  image,
 			Stdout: outWriter,
 			Stderr: errWriter,
