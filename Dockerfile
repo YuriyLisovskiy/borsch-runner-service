@@ -1,8 +1,5 @@
 FROM golang:1.17-alpine
 WORKDIR /app/
-#ENV CGO_ENABLED=1
-
-RUN #apk add build-base
 
 COPY . .
 

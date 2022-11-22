@@ -6,7 +6,7 @@
  * terms of the MIT license.
  */
 
-package internal
+package core
 
 import (
 	"log"
