@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"YuriyLisovskiy/borsch-runner-service/internal/cli"
+	"github.com/YuriyLisovskiy/borsch-runner-service/internal/cli"
 )
 
 func main() {

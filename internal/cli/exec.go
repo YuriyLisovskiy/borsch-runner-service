@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"YuriyLisovskiy/borsch-runner-service/internal/core"
+	"github.com/YuriyLisovskiy/borsch-runner-service/internal/core"
 )
 
 func ExecuteApp() error {

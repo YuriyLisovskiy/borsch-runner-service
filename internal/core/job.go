@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"strings"
 
-	"YuriyLisovskiy/borsch-runner-service/pkg/docker"
+	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/docker"
 )
 
 type Job struct {

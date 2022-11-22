@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
-	"YuriyLisovskiy/borsch-runner-service/pkg/docker"
-	"YuriyLisovskiy/borsch-runner-service/pkg/messages"
+	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/docker"
+	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/messages"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
