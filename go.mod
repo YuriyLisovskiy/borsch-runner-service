@@ -1,4 +1,4 @@
-module YuriyLisovskiy/borsch-runner-service
+module github.com/YuriyLisovskiy/borsch-runner-service
 
 go 1.17
 

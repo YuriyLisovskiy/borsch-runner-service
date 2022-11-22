@@ -11,7 +11,7 @@ package core
 import (
 	"log"
 
-	"YuriyLisovskiy/borsch-runner-service/pkg/messages"
+	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/messages"
 )
 
 type JobLogger struct {
