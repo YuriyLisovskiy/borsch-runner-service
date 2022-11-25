@@ -22,7 +22,6 @@ type JobLogger struct {
 func (jl *JobLogger) Log(output string) {
 	notification := messages.JobResultMessage{
 		ID:   jl.jobId,
-		Type: messages.JobResultLog,
 		Data: output,
 	}
 	err := jl.amqpJobService.PublishResult(&notification)

@@ -12,8 +12,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/docker"
+	"github.com/YuriyLisovskiy/borsch-runner-service/internal/docker"
 )
 
 type Job struct {
@@ -32,12 +33,12 @@ func NewJob(image, shell, command, code string, outWriter, errWriter docker.Cont
 	}
 }
 
-func (j *Job) Run() (int, error) {
+func (j *Job) RunWithTimeout(t time.Duration) (int, error) {
 	if j.container == nil {
 		return -1, errors.New("docker container is nil")
 	}
 
-	return j.container.Run(j.command...)
+	return j.container.Run(t, j.command...)
 }
 
 func prepareShellScript(command, code string) string {

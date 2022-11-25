@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -167,17 +166,17 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		jobLogger,
 		jobLogger,
 	)
-	exitCode, err := dockerJob.Run()
+	exitCode, err := dockerJob.RunWithTimeout(jobMessage.Timeout)
 	if err != nil {
 		return err
 	}
 
 	jobResult := messages.JobResultMessage{
-		ID:   jobMessage.ID,
-		Type: messages.JobResultExit,
-		Data: strconv.Itoa(exitCode),
+		ID:       jobMessage.ID,
+		ExitCode: new(int),
 	}
 
+	*jobResult.ExitCode = exitCode
 	return mq.PublishResult(&jobResult)
 }
 

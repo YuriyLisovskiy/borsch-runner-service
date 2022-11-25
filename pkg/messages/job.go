@@ -8,21 +8,17 @@
 
 package messages
 
+import "time"
+
 type JobMessage struct {
-	ID            string `json:"id"`
-	LangVersion   string `json:"lang_version"`
-	SourceCodeB64 string `json:"source_code_b64"`
+	ID            string        `json:"id"`
+	LangVersion   string        `json:"lang_version"`
+	SourceCodeB64 string        `json:"source_code_b64"`
+	Timeout       time.Duration `json:"timeout"`
 }
 
-type JobResultType string
-
-const (
-	JobResultLog  JobResultType = "log"
-	JobResultExit               = "exit"
-)
-
 type JobResultMessage struct {
-	ID   string        `json:"id"`
-	Type JobResultType `json:"type"`
-	Data string        `json:"data"`
+	ID       string `json:"id"`
+	Data     string `json:"data"`
+	ExitCode *int   `json:"exit_code"`
 }
