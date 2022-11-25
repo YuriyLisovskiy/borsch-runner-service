@@ -10,17 +10,24 @@ package docker
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os/exec"
+	"syscall"
+	"time"
 )
 
 const (
 	EnvContainerImageTemplate   = "CONTAINER_IMAGE_TEMPLATE"
 	EnvContainerShell           = "CONTAINER_SHELL"
 	EnvContainerCommandTemplate = "CONTAINER_COMMAND_TEMPLATE"
+
+	ContainerErrCode = -1
 )
+
+var ErrContainerTimedOut = errors.New("timeout error")
 
 type ContainerLogger interface {
 	Log(out string)
@@ -34,53 +41,68 @@ type Container struct {
 	cmd *exec.Cmd
 }
 
-func (dc *Container) Run(args ...string) (int, error) {
+func (dc *Container) Run(timeout time.Duration, args ...string) (int, error) {
 	defer func() {
 		dc.cmd = nil
 	}()
 
 	if dc.cmd != nil {
-		return -1, errors.New(fmt.Sprintf("Container %s is already running", dc.Image))
+		return ContainerErrCode, errors.New(fmt.Sprintf("Container %s is already running", dc.Image))
 	}
 
 	dc.cmd = exec.Command("docker", append([]string{"run", "--rm", dc.Image}, args...)...)
 	stdoutReader, err := dc.cmd.StdoutPipe()
 	if err != nil {
-		return -1, err
+		return ContainerErrCode, err
 	}
 
-	stdoutScanner, err := newStdScanner(stdoutReader, dc.Stdout)
+	_, err = newStdScanner(stdoutReader, dc.Stdout)
 	if err != nil {
-		return -1, err
+		return ContainerErrCode, err
 	}
 
 	stderrReader, err := dc.cmd.StderrPipe()
 	if err != nil {
-		return -1, err
+		return ContainerErrCode, err
 	}
 
-	stderrScanner, err := newStdScanner(stderrReader, dc.Stderr)
+	_, err = newStdScanner(stderrReader, dc.Stderr)
 	if err != nil {
-		return -1, err
+		return ContainerErrCode, err
 	}
 
-	if err := dc.cmd.Start(); err != nil {
-		return -1, err
-	}
-
-	<-stdoutScanner.doneChan
-	<-stderrScanner.doneChan
-
-	err = dc.cmd.Wait()
+	err = dc.cmd.Start()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return exitErr.ExitCode(), err
+		return ContainerErrCode, err
+	}
+
+	timeoutContext, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	errChan := make(chan error)
+	go func() {
+		errChan <- dc.cmd.Wait()
+	}()
+
+	select {
+	case err := <-errChan:
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				return exitErr.ExitCode(), err
+			}
+
+			return ContainerErrCode, err
 		}
 
-		return -1, err
-	}
+		return 0, nil
+	case <-timeoutContext.Done():
+		err = dc.cmd.Process.Kill()
+		if err != nil {
+			return ContainerErrCode, errors.New("failed to kill process")
+		}
 
-	return 0, nil
+		return int(syscall.SIGKILL), ErrContainerTimedOut
+	}
 }
 
 type stdScanner struct {

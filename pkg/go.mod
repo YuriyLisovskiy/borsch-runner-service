@@ -1,3 +1,3 @@
 module github.com/YuriyLisovskiy/borsch-runner-service/pkg
 
-go 1.17
+go 1.19

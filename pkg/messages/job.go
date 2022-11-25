@@ -8,21 +8,27 @@
 
 package messages
 
+import "time"
+
 type JobMessage struct {
-	ID            string `json:"id"`
-	LangVersion   string `json:"lang_version"`
-	SourceCodeB64 string `json:"source_code_b64"`
+	ID            string        `json:"id"`
+	LangVersion   string        `json:"lang_version"`
+	SourceCodeB64 string        `json:"source_code_b64"`
+	Timeout       time.Duration `json:"timeout"`
 }
 
-type JobResultType string
+type JobResultType int
 
 const (
-	JobResultLog  JobResultType = "log"
-	JobResultExit               = "exit"
+	JobResultStart = iota // Data is an empty string, ExitCode is nil.
+	JobResultLog          // Data contains std output, ExitCode is nil.
+	JobResultExit         // Data is empty string, ExitCode is set.
+	JobResultError        // Internal container error: Data contains error message, ExistCode is nil.
 )
 
 type JobResultMessage struct {
-	ID   string        `json:"id"`
-	Type JobResultType `json:"type"`
-	Data string        `json:"data"`
+	ID       string        `json:"id"`
+	Type     JobResultType `json:"type"`
+	Data     string        `json:"data"`
+	ExitCode *int          `json:"exit_code"`
 }

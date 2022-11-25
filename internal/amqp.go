@@ -6,7 +6,7 @@
  * terms of the MIT license.
  */
 
-package core
+package internal
 
 import (
 	"context"
@@ -15,11 +15,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/docker"
+	"github.com/YuriyLisovskiy/borsch-runner-service/internal/docker"
 	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/messages"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -147,8 +146,21 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		return err
 	}
 
-	log.Printf("PROCESSING JOB: %v\n", jobMessage.ID)
+	if jobMessage.Timeout <= 0 {
+		return fmt.Errorf("expected non-megative timeout, received %v", jobMessage.Timeout)
+	}
 
+	jobResult := messages.JobResultMessage{
+		ID:   jobMessage.ID,
+		Type: messages.JobResultStart,
+	}
+
+	err = mq.PublishResult(&jobResult)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("PROCESSING JOB: %v\n", jobMessage.ID)
 	jobLogger := &JobLogger{
 		jobId:          jobMessage.ID,
 		amqpJobService: mq,
@@ -167,15 +179,14 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		jobLogger,
 		jobLogger,
 	)
-	exitCode, err := dockerJob.Run()
+	exitCode, err := dockerJob.RunWithTimeout(jobMessage.Timeout)
 	if err != nil {
-		return err
-	}
-
-	jobResult := messages.JobResultMessage{
-		ID:   jobMessage.ID,
-		Type: messages.JobResultExit,
-		Data: strconv.Itoa(exitCode),
+		jobResult.Data = err.Error()
+		jobResult.Type = messages.JobResultError
+	} else {
+		jobResult.ExitCode = new(int)
+		*jobResult.ExitCode = exitCode
+		jobResult.Type = messages.JobResultExit
 	}
 
 	return mq.PublishResult(&jobResult)
