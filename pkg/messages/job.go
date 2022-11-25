@@ -21,4 +21,5 @@ type JobResultMessage struct {
 	ID       string `json:"id"`
 	Data     string `json:"data"`
 	ExitCode *int   `json:"exit_code"`
+	Error    error  `json:"error"`
 }

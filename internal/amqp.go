@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/docker"
+	"github.com/YuriyLisovskiy/borsch-runner-service/internal/docker"
 	"github.com/YuriyLisovskiy/borsch-runner-service/pkg/messages"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -147,6 +147,10 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 	}
 
 	log.Printf("PROCESSING JOB: %v\n", jobMessage.ID)
+
+	// if jobMessage.Timeout <= 0 {
+	// 	ret
+	// }
 
 	jobLogger := &JobLogger{
 		jobId:          jobMessage.ID,
