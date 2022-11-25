@@ -10,6 +10,7 @@ package docker
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -75,6 +76,9 @@ func (dc *Container) Run(timeout time.Duration, args ...string) (int, error) {
 		return ContainerErrCode, err
 	}
 
+	timeoutContext, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	errChan := make(chan error)
 	go func() {
 		errChan <- dc.cmd.Wait()
@@ -89,8 +93,9 @@ func (dc *Container) Run(timeout time.Duration, args ...string) (int, error) {
 
 			return ContainerErrCode, err
 		}
+
 		return 0, nil
-	case <-time.After(timeout):
+	case <-timeoutContext.Done():
 		err = dc.cmd.Process.Kill()
 		if err != nil {
 			return ContainerErrCode, errors.New("failed to kill process")

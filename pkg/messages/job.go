@@ -17,9 +17,18 @@ type JobMessage struct {
 	Timeout       time.Duration `json:"timeout"`
 }
 
+type JobResultType int
+
+const (
+	JobResultStart = iota // Data is an empty string, ExitCode is nil.
+	JobResultLog          // Data contains std output, ExitCode is nil.
+	JobResultExit         // Data is empty string, ExitCode is set.
+	JobResultError        // Internal container error: Data contains error message, ExistCode is nil.
+)
+
 type JobResultMessage struct {
-	ID       string `json:"id"`
-	Data     string `json:"data"`
-	ExitCode *int   `json:"exit_code"`
-	Error    error  `json:"error"`
+	ID       string        `json:"id"`
+	Type     JobResultType `json:"type"`
+	Data     string        `json:"data"`
+	ExitCode *int          `json:"exit_code"`
 }

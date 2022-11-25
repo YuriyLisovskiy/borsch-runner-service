@@ -146,12 +146,21 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		return err
 	}
 
+	if jobMessage.Timeout <= 0 {
+		return fmt.Errorf("expected non-megative timeout, received %v", jobMessage.Timeout)
+	}
+
+	jobResult := messages.JobResultMessage{
+		ID:   jobMessage.ID,
+		Type: messages.JobResultStart,
+	}
+
+	err = mq.PublishResult(&jobResult)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("PROCESSING JOB: %v\n", jobMessage.ID)
-
-	// if jobMessage.Timeout <= 0 {
-	// 	ret
-	// }
-
 	jobLogger := &JobLogger{
 		jobId:          jobMessage.ID,
 		amqpJobService: mq,
@@ -172,15 +181,14 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 	)
 	exitCode, err := dockerJob.RunWithTimeout(jobMessage.Timeout)
 	if err != nil {
-		return err
+		jobResult.Data = err.Error()
+		jobResult.Type = messages.JobResultError
+	} else {
+		jobResult.ExitCode = new(int)
+		*jobResult.ExitCode = exitCode
+		jobResult.Type = messages.JobResultExit
 	}
 
-	jobResult := messages.JobResultMessage{
-		ID:       jobMessage.ID,
-		ExitCode: new(int),
-	}
-
-	*jobResult.ExitCode = exitCode
 	return mq.PublishResult(&jobResult)
 }
 
