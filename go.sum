@@ -1,5 +1,5 @@
-github.com/YuriyLisovskiy/borsch-runner-service/pkg v0.0.0-20221126073532-05a26683b85f h1:mWgm0Lh3D814ku1sZ6gmyaC3wGcQJECu1J1/xuH9Opw=
-github.com/YuriyLisovskiy/borsch-runner-service/pkg v0.0.0-20221126073532-05a26683b85f/go.mod h1:Sa+nSzVWpjwv3e29JfjWzBR0K31DctkLS3KpDtbfNqU=
+github.com/YuriyLisovskiy/borsch-runner-service/pkg v0.4.0 h1:A6nxZ6O8dLkjxwa5sZhklysVT9O9dJDpAUYskhBIIF4=
+github.com/YuriyLisovskiy/borsch-runner-service/pkg v0.4.0/go.mod h1:v9AIcQLvgKtrOKdKSahkB3HhJUq+veJf6TGD7YVO7DM=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
