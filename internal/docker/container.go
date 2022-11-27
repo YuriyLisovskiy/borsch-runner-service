@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
-	"syscall"
 	"time"
 )
 
@@ -26,8 +25,6 @@ const (
 
 	ContainerErrCode = -1
 )
-
-var ErrContainerTimedOut = errors.New("timeout error")
 
 type ContainerLogger interface {
 	Log(out string)
@@ -50,7 +47,10 @@ func (dc *Container) Run(timeout time.Duration, args ...string) (int, error) {
 		return ContainerErrCode, errors.New(fmt.Sprintf("Container %s is already running", dc.Image))
 	}
 
-	dc.cmd = exec.Command("docker", append([]string{"run", "--rm", dc.Image}, args...)...)
+	timeoutContext, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	dc.cmd = exec.CommandContext(timeoutContext, "docker", append([]string{"run", "--rm", dc.Image}, args...)...)
 	stdoutReader, err := dc.cmd.StdoutPipe()
 	if err != nil {
 		return ContainerErrCode, err
@@ -76,33 +76,16 @@ func (dc *Container) Run(timeout time.Duration, args ...string) (int, error) {
 		return ContainerErrCode, err
 	}
 
-	timeoutContext, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	errChan := make(chan error)
-	go func() {
-		errChan <- dc.cmd.Wait()
-	}()
-
-	select {
-	case err := <-errChan:
-		if err != nil {
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				return exitErr.ExitCode(), err
-			}
-
-			return ContainerErrCode, err
+	err = dc.cmd.Wait()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return exitErr.ExitCode(), err
 		}
 
-		return 0, nil
-	case <-timeoutContext.Done():
-		err = dc.cmd.Process.Kill()
-		if err != nil {
-			return ContainerErrCode, errors.New("failed to kill process")
-		}
-
-		return int(syscall.SIGKILL), ErrContainerTimedOut
+		return ContainerErrCode, err
 	}
+
+	return 0, nil
 }
 
 type stdScanner struct {

@@ -58,13 +58,13 @@ func NewRabbitMQService(server string) (*RabbitMQJobService, error) {
 	}
 	service.jobChannel, service.jobQueue, err = createQueue(connection, os.Getenv(EnvRabbitMQJobQueue))
 	if err != nil {
-		connection.Close()
+		withErr(connection.Close())
 		return nil, err
 	}
 
 	service.jobResultChannel, service.jobResultQueue, err = createQueue(connection, os.Getenv(EnvRabbitMQResultQueue))
 	if err != nil {
-		connection.Close()
+		withErr(connection.Close())
 		return nil, err
 	}
 
@@ -72,16 +72,17 @@ func NewRabbitMQService(server string) (*RabbitMQJobService, error) {
 }
 
 func (mq *RabbitMQJobService) ConsumeJobs() error {
-	defer mq.connection.Close()
-	defer mq.jobChannel.Close()
-	defer mq.jobResultChannel.Close()
-	messages, err := mq.jobChannel.Consume(
+	defer withErr(mq.connection.Close())
+	defer withErr(mq.jobChannel.Close())
+	defer withErr(mq.jobResultChannel.Close())
+
+	delivery, err := mq.jobChannel.Consume(
 		mq.jobQueue.Name, // queue
 		"",               // consumer
-		false,            // auto-ack
+		false,            // autoAck
 		false,            // exclusive
-		false,            // no-local
-		false,            // no-wait
+		false,            // noLocal
+		false,            // noWait
 		nil,              // args
 	)
 	if err != nil {
@@ -90,7 +91,7 @@ func (mq *RabbitMQJobService) ConsumeJobs() error {
 
 	var forever chan struct{}
 	go func() {
-		for d := range messages {
+		for d := range delivery {
 			err = mq.processJob(d.Body)
 			if err != nil {
 				log.Printf(err.Error())
@@ -123,7 +124,7 @@ func (mq *RabbitMQJobService) PublishResult(jobResult *messages.JobResultMessage
 		"",                     // exchange
 		mq.jobResultQueue.Name, // routing key
 		false,                  // mandatory
-		false,
+		false,                  // immediate
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent,
 			ContentType:  "text/plain",
@@ -133,8 +134,6 @@ func (mq *RabbitMQJobService) PublishResult(jobResult *messages.JobResultMessage
 	if err != nil {
 		return fmt.Errorf("failed to publish a message: %v", err)
 	}
-
-	log.Printf("PUBLISHING RESULT: %v\n", jobResult.Data)
 
 	return nil
 }
@@ -160,12 +159,10 @@ func (mq *RabbitMQJobService) processJob(data []byte) error {
 		return err
 	}
 
-	log.Printf("PROCESSING JOB: %v\n", jobMessage.ID)
 	jobLogger := &JobLogger{
 		jobId:          jobMessage.ID,
 		amqpJobService: mq,
 	}
-
 	sourceCode, err := base64.StdEncoding.DecodeString(jobMessage.SourceCodeB64)
 	if err != nil {
 		return err
@@ -198,8 +195,6 @@ func createQueue(connection *amqp.Connection, name string) (*amqp.Channel, amqp.
 		return nil, amqp.Queue{}, fmt.Errorf("failed to open a channel: %v", err)
 	}
 
-	// defer channel.Close()
-
 	queue, err := channel.QueueDeclare(
 		name,  // name
 		true,  // durable
@@ -218,8 +213,14 @@ func createQueue(connection *amqp.Connection, name string) (*amqp.Channel, amqp.
 		false, // global
 	)
 	if err != nil {
-		return nil, amqp.Queue{}, fmt.Errorf("failed to set QoS: %v", err)
+		return nil, amqp.Queue{}, fmt.Errorf("failed to set Qos: %v", err)
 	}
 
 	return channel, queue, nil
+}
+
+func withErr(err error) {
+	if err != nil {
+		log.Println(err)
+	}
 }
